@@ -1,13 +1,22 @@
 import React from "react";
 
-const Button = ({ type = "", label = "", className = "", children }) => {
+const Button = ({
+  type = "",
+  label = "",
+  className = "",
+  onClick = () => null,
+  children,
+}) => {
   return (
-    <button
-      type={type}
-      className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${className}`}
-    >
-      {label || children}
-    </button>
+    <div>
+      <button
+        type={type}
+        className={`${className} bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded`}
+        onClick={onClick}
+      >
+        {label || children}
+      </button>
+    </div>
   );
 };
 

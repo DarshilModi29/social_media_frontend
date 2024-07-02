@@ -6,6 +6,9 @@ const Input = ({
   type = "text",
   placeholder = "",
   className = "",
+  value = "",
+  onChange = () => null,
+  isRequired = true,
 }) => {
   return (
     <div className="mb-4">
@@ -21,7 +24,10 @@ const Input = ({
         type={type}
         placeholder={placeholder}
         id={name}
-        className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${className}`}
+        className={`shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${className}`}
+        value={value}
+        onChange={onChange}
+        required={isRequired}
       />
     </div>
   );
