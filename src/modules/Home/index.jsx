@@ -4,8 +4,11 @@ import Input from "../../components/input";
 import Button from "../../components/button";
 import postImg from "../../assets/postImg.jpg";
 import { stats, navigation } from "./data";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
       <div className="w-[20%] bg-white flex flex-col">
@@ -59,7 +62,10 @@ const Home = () => {
               className="mb-4 ml-3 rounded-3xl bg-red-600 hover:bg-red-700"
             />
           </div>
-          <Button className="bg-red-600 mb-4 rounded-3xl hover:bg-red-700">
+          <Button
+            onClick={() => navigate("/new-post")}
+            className="bg-red-600 mb-4 rounded-3xl hover:bg-red-700"
+          >
             <i className="bi bi-plus-lg mr-1"></i> Create New Post
           </Button>
         </div>

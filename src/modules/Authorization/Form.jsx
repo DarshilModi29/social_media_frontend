@@ -4,9 +4,59 @@ import Button from "../../components/button";
 import LoginSvg from "../../assets/login";
 import RegisterSvg from "../../assets/register";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import AWN from "awesome-notifications";
+import "awesome-notifications/dist/style.css";
 
 const Form = ({ isSignInPage = false }) => {
   const navigate = useNavigate();
+  const [data, setData] = useState({
+    ...(!isSignInPage && { username: "" }),
+    email: "",
+    password: "",
+  });
+
+  const notifier = new AWN({
+    durations: {
+      global: 2000, // default duration for all notifications in milliseconds
+      success: 1500,
+      warning: 1500,
+      info: 1500,
+      alert: 1500,
+      async: 1500,
+      confirm: 1500,
+    },
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const response = await fetch(
+      `http://localhost:8000/api/${isSignInPage ? "login" : "register"}`,
+      {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify({ ...data }),
+      }
+    );
+    const responseData = await response.json();
+    console.log(responseData);
+    if (isSignInPage) {
+      if (response.status === 200) {
+        Cookies.set("user:token", responseData.token, { expires: 1 });
+        navigate("/");
+      } else {
+        notifier.alert(responseData.message);
+      }
+    } else {
+      if (response.status === 200) {
+        notifier.success(responseData.message);
+      } else {
+        notifier.alert(responseData.message);
+      }
+    }
+  };
+
   return (
     <div className="bg-[#d2cfdf] h-screen w-full flex justify-center items-center">
       <div className="h-[500px] w-[900px] bg-white flex justify-center items-center">
@@ -21,13 +71,17 @@ const Form = ({ isSignInPage = false }) => {
           <p className="mb-[30px] font-light text-base">
             PLEASE {isSignInPage ? "LOGIN" : "REGISTER"} TO CONTINUE
           </p>
-          <form>
+          <form onSubmit={handleSubmit}>
             {!isSignInPage && (
               <Input
-                label="Username"
+                label="username"
                 type="text"
                 placeholder="Enter your username"
                 name="username"
+                className="w-[250px]"
+                value={data.username}
+                onChange={(e) => setData({ ...data, username: e.target.value })}
+                isRequired
               />
             )}
             <Input
@@ -35,12 +89,18 @@ const Form = ({ isSignInPage = false }) => {
               type="email"
               placeholder="Enter your email"
               name="email"
+              className="w-[250px]"
+              value={data.email}
+              onChange={(e) => setData({ ...data, email: e.target.value })}
             />
             <Input
               label="Password"
               type="password"
               placeholder="Enter your password"
               name="password"
+              className="w-[250px]"
+              value={data.password}
+              onChange={(e) => setData({ ...data, password: e.target.value })}
             />
             <Button
               type="submit"
