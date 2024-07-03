@@ -2,9 +2,12 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "../modules/Home";
 import Auth from "../modules/Authorization";
+import Cookies from "js-cookie";
+import CreatePost from "../modules/CreatePost";
+import Profile from "../modules/Profile";
 
 const PrivateRoute = ({ children }) => {
-  const isUserLoggedIn = window.localStorage.getItem("user:token") || true;
+  const isUserLoggedIn = Cookies.get("user:token") || false;
   const isAuthPages = window.location.pathname.includes("auth");
   if (isUserLoggedIn && !isAuthPages) {
     return children;
@@ -31,10 +34,22 @@ const Routers = () => {
       component: <Auth />,
     },
     {
-      id: 2,
+      id: 3,
       name: "sign up",
       path: "/auth/signup",
       component: <Auth />,
+    },
+    {
+      id: 4,
+      name: "create post",
+      path: "/new-post",
+      component: <CreatePost />,
+    },
+    {
+      id: 5,
+      name: "my profile",
+      path: "/profile",
+      component: <Profile />,
     },
   ];
   return (

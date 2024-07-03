@@ -1,13 +1,52 @@
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { ReactComponent as Avatar } from "../../assets/avatar.svg";
 import Input from "../../components/input";
 import Button from "../../components/button";
-import postImg from "../../assets/postImg.jpg";
 import { stats, navigation } from "./data";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import AWN from "awesome-notifications";
+import "awesome-notifications/dist/style.css";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [user, setUser] = useState({ username: "", name: "" });
+
+  const notifier = useMemo(
+    () =>
+      new AWN({
+        durations: {
+          global: 2000, // default duration for all notifications in milliseconds
+          success: 1500,
+          warning: 1500,
+          info: 1500,
+          alert: 1500,
+          async: 1500,
+          confirm: 1500,
+        },
+      }),
+    []
+  );
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const res = await fetch(`http://localhost:8000/api/all-posts`, {
+        headers: { authorization: `bearer ${Cookies.get("user:token") || ""}` },
+      });
+      const resData = await res.json();
+      if (res.status === 200) {
+        setData(resData.posts);
+        setUser({
+          username: resData.user.email,
+          name: resData.user.username,
+        });
+      } else {
+        notifier.alert(resData.message);
+      }
+    };
+    fetchPosts();
+  }, [notifier]);
 
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
@@ -20,8 +59,8 @@ const Home = () => {
               style={{ borderRadius: "50%" }}
             />
             <div className="my-2">
-              <h3 className="font-bold text-base">Lara Jane</h3>
-              <p>@larajane</p>
+              <h3 className="font-bold text-base">{user.name}</h3>
+              <p>@{user.username.split("@")[0]}</p>
             </div>
             <div className="h-[30px] flex justify-around w-[250px] text-center">
               {stats.map((stat) => {
@@ -38,9 +77,13 @@ const Home = () => {
         <div className="h-[55%] flex flex-col justify-evenly pl-10 border-b">
           {navigation.map((nav) => {
             return (
-              <div key={nav.id} className="text-gray-500 hover:text-red-600">
+              <Link
+                to={nav.url}
+                key={nav.id}
+                className="cursor-pointer text-gray-500 hover:text-red-600"
+              >
                 <i className={nav.icon}></i> {nav.name}
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -69,42 +112,43 @@ const Home = () => {
             <i className="bi bi-plus-lg mr-1"></i> Create New Post
           </Button>
         </div>
-        {[0, 1, 2, 3, 4].map(() => {
-          return (
-            <div className="bg-white w-[70%] mx-auto mt-12 p-6">
-              <div className="border-b flex items-center mb-4">
-                <Avatar width={"30px"} height={"30px"} />
-                <div className="ml-4">
-                  <h3 className="font-bold text-base">Lara Jane</h3>
-                  <p>@larajane</p>
+        {data?.length > 0 &&
+          data?.map(({ _id, caption, description, image, user }) => {
+            return (
+              <div key={_id} className="bg-white w-[70%] mx-auto mt-12 p-6">
+                <div className="border-b flex items-center mb-4">
+                  <Avatar width={"30px"} height={"30px"} />
+                  <div className="ml-4">
+                    <h3 className="font-bold text-base">{user.username}</h3>
+                    <p>@{user.email.split("@")[0]}</p>
+                  </div>
+                </div>
+                <div className="border-b mb-2 pb-3">
+                  <div className="h-[400px] flex items-center justify-center bg-gray-100 p-4">
+                    <img src={image} className="max-h-full" alt="post" />
+                  </div>
+                  <div className="flex mt-3 pb-2 mb-2 border-b">
+                    <p className="font-medium">{caption}</p>
+                  </div>
+                  <p className="mt-2 text-justify">{description}</p>
+                </div>
+                <div className="flex justify-evenly">
+                  <button type="button">
+                    <i className="bi bi-heart"></i> 10.5k Likes
+                  </button>
+                  <button type="button">
+                    <i className="bi bi-chat-dots"></i> 10.5k Comments
+                  </button>
+                  <button type="button">
+                    <i className="bi bi-share"></i> 10.5k Shares
+                  </button>
+                  <button type="button">
+                    <i className="bi bi-bookmark"></i> 10 Saved
+                  </button>
                 </div>
               </div>
-              <div className="border-b mb-2 pb-3">
-                <img src={postImg} alt="post" />
-                <p className="mt-2 text-justify">
-                  Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad
-                  nostrum maiores commodi fuga, magnam et fugit debitis aperiam
-                  est ut dignissimos ab fugiat at dolores dolore magni
-                  exercitationem, libero nobis.
-                </p>
-              </div>
-              <div className="flex justify-evenly">
-                <button type="button">
-                  <i className="bi bi-heart"></i> 10.5k Likes
-                </button>
-                <button type="button">
-                  <i className="bi bi-chat-dots"></i> 10.5k Comments
-                </button>
-                <button type="button">
-                  <i className="bi bi-share"></i> 10.5k Shares
-                </button>
-                <button type="button">
-                  <i className="bi bi-bookmark"></i> 10 Saved
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
       <div className="w-[20%] bg-white"></div>
     </div>
