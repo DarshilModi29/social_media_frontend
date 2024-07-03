@@ -43,7 +43,7 @@ const Form = ({ isSignInPage = false }) => {
     console.log(responseData);
     if (isSignInPage) {
       if (response.status === 200) {
-        Cookies.set("user:token", responseData.token, { expires: 1 });
+        Cookies.set("user:token", responseData.token, { expires: 365 * 2 });
         navigate("/");
       } else {
         notifier.alert(responseData.message);
