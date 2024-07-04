@@ -11,7 +11,7 @@ import "awesome-notifications/dist/style.css";
 const Home = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
-  const [user, setUser] = useState({ username: "", name: "" });
+  const [currUser, setCurrUser] = useState({ username: "", name: "" });
 
   const notifier = useMemo(
     () =>
@@ -37,7 +37,7 @@ const Home = () => {
       const resData = await res.json();
       if (res.status === 200) {
         setData(resData.posts);
-        setUser({
+        setCurrUser({
           username: resData.user.email,
           name: resData.user.username,
         });
@@ -59,8 +59,8 @@ const Home = () => {
               style={{ borderRadius: "50%" }}
             />
             <div className="my-2">
-              <h3 className="font-bold text-base">{user.name}</h3>
-              <p>@{user.username.split("@")[0]}</p>
+              <h3 className="font-bold text-base">{currUser.name}</h3>
+              <p>@{currUser.username.split("@")[0]}</p>
             </div>
             <div className="h-[30px] flex justify-around w-[250px] text-center">
               {stats.map((stat) => {
@@ -96,7 +96,7 @@ const Home = () => {
           </button>
         </div>
       </div>
-      <div className="w-[60%] overflow-scroll h-full scrollbar-hide">
+      <div className="w-[60%] overflow-scroll h-full scrollbar-hide pb-8">
         <div className="bg-white h-[50px] flex  justify-evenly items-center pt-4 sticky top-0 shadow-lg border">
           <div className="flex justify-center items-center">
             <Input placeholder="Search" className="w-[300px] rounded-3xl" />
@@ -116,7 +116,14 @@ const Home = () => {
           data?.map(({ _id, caption, description, image, user }) => {
             return (
               <div key={_id} className="bg-white w-[70%] mx-auto mt-12 p-6">
-                <div className="border-b flex items-center mb-4">
+                <div
+                  className="border-b flex items-center mb-4 cursor-pointer"
+                  onClick={() => {
+                    currUser.name === user.username
+                      ? navigate("/profile")
+                      : navigate(`/user/${user?.username}`);
+                  }}
+                >
                   <Avatar width={"30px"} height={"30px"} />
                   <div className="ml-4">
                     <h3 className="font-bold text-base">{user.username}</h3>

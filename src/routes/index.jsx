@@ -5,6 +5,7 @@ import Auth from "../modules/Authorization";
 import Cookies from "js-cookie";
 import CreatePost from "../modules/CreatePost";
 import Profile from "../modules/Profile";
+import User from "../modules/User";
 
 const PrivateRoute = ({ children }) => {
   const isUserLoggedIn = Cookies.get("user:token") || false;
@@ -50,6 +51,12 @@ const Routers = () => {
       name: "my profile",
       path: "/profile",
       component: <Profile />,
+    },
+    {
+      id: 6,
+      name: "user profile",
+      path: "/user/:username",
+      component: <User />,
     },
   ];
   return (
