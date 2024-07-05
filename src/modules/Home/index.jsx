@@ -11,7 +11,8 @@ import "awesome-notifications/dist/style.css";
 const Home = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
-  const [currUser, setCurrUser] = useState({ username: "", name: "" });
+  const [currUser, setCurrUser] = useState({ _id: "", username: "", name: "" });
+  const token = Cookies.get("user:token") || "";
 
   const notifier = useMemo(
     () =>
@@ -29,15 +30,60 @@ const Home = () => {
     []
   );
 
+  const handleLikes = async (post_id, index) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/like`, {
+        method: "PUT",
+        headers: {
+          "Content-type": "application/json",
+          authorization: `bearer ${token}`,
+        },
+        body: JSON.stringify({ id: post_id }),
+      });
+      const resData = await res.json();
+      if (res.status === 200) {
+        const { updatedPost } = resData;
+        data[index] = updatedPost;
+      } else {
+        notifier.alert(resData.message);
+      }
+    } catch (error) {
+      notifier.alert(error.toString());
+    }
+  };
+
+  const handleUnlikes = async (post_id, index) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/unlike`, {
+        method: "PUT",
+        headers: {
+          "Content-type": "application/json",
+          authorization: `bearer ${token}`,
+        },
+        body: JSON.stringify({ id: post_id }),
+      });
+      const resData = await res.json();
+      if (res.status === 200) {
+        const { updatedPost } = resData;
+        data[index] = updatedPost;
+      } else {
+        notifier.alert(resData.message);
+      }
+    } catch (error) {
+      notifier.alert(error.toString());
+    }
+  };
+
   useEffect(() => {
     const fetchPosts = async () => {
       const res = await fetch(`http://localhost:8000/api/all-posts`, {
-        headers: { authorization: `bearer ${Cookies.get("user:token") || ""}` },
+        headers: { authorization: `bearer ${token}` },
       });
       const resData = await res.json();
       if (res.status === 200) {
         setData(resData.posts);
         setCurrUser({
+          _id: resData.user._id,
           username: resData.user.email,
           name: resData.user.username,
         });
@@ -46,7 +92,7 @@ const Home = () => {
       }
     };
     fetchPosts();
-  }, [notifier]);
+  }, [notifier, token]);
 
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
@@ -113,49 +159,77 @@ const Home = () => {
           </Button>
         </div>
         {data?.length > 0 &&
-          data?.map(({ _id, caption, description, image, user }) => {
-            return (
-              <div key={_id} className="bg-white w-[70%] mx-auto mt-12 p-6">
-                <div
-                  className="border-b flex items-center mb-4 cursor-pointer"
-                  onClick={() => {
-                    currUser.name === user.username
-                      ? navigate("/profile")
-                      : navigate(`/user/${user?.username}`);
-                  }}
-                >
-                  <Avatar width={"30px"} height={"30px"} />
-                  <div className="ml-4">
-                    <h3 className="font-bold text-base">{user.username}</h3>
-                    <p>@{user.email.split("@")[0]}</p>
+          data?.map(
+            (
+              {
+                _id,
+                caption = "",
+                description = "",
+                image = "",
+                user = {},
+                likes = [],
+              },
+              index
+            ) => {
+              const isAlreadyLiked =
+                likes.length > 0 && likes.includes(currUser._id);
+              return (
+                <div key={_id} className="bg-white w-[70%] mx-auto mt-12 p-6">
+                  <div
+                    className="border-b flex items-center mb-4 cursor-pointer"
+                    onClick={() => {
+                      currUser.name === user.username
+                        ? navigate("/profile")
+                        : navigate(`/user/${user?.username}`);
+                    }}
+                  >
+                    <Avatar width={"30px"} height={"30px"} />
+                    <div className="ml-4">
+                      <h3 className="font-bold text-base">{user.username}</h3>
+                      <p>@{user.email.split("@")[0]}</p>
+                    </div>
+                  </div>
+                  <div className="border-b mb-2 pb-3">
+                    <div className="h-[400px] flex items-center justify-center bg-gray-100 p-4">
+                      <img src={image} className="max-h-full" alt="post" />
+                    </div>
+                    <div className="flex mt-3 pb-2 mb-2 border-b">
+                      <p className="font-medium">{caption}</p>
+                    </div>
+                    <p className="mt-2 text-justify">{description}</p>
+                  </div>
+                  <div className="flex justify-evenly">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isAlreadyLiked
+                          ? handleUnlikes(_id, index)
+                          : handleLikes(_id, index)
+                      }
+                    >
+                      <i
+                        className={
+                          isAlreadyLiked
+                            ? "bi bi-heart-fill text-red-600"
+                            : "bi bi-heart"
+                        }
+                      ></i>{" "}
+                      {likes.length} Likes
+                    </button>
+                    <button type="button">
+                      <i className="bi bi-chat-dots"></i> 10.5k Comments
+                    </button>
+                    <button type="button">
+                      <i className="bi bi-share"></i> 10.5k Shares
+                    </button>
+                    <button type="button">
+                      <i className="bi bi-bookmark"></i> 10 Saved
+                    </button>
                   </div>
                 </div>
-                <div className="border-b mb-2 pb-3">
-                  <div className="h-[400px] flex items-center justify-center bg-gray-100 p-4">
-                    <img src={image} className="max-h-full" alt="post" />
-                  </div>
-                  <div className="flex mt-3 pb-2 mb-2 border-b">
-                    <p className="font-medium">{caption}</p>
-                  </div>
-                  <p className="mt-2 text-justify">{description}</p>
-                </div>
-                <div className="flex justify-evenly">
-                  <button type="button">
-                    <i className="bi bi-heart"></i> 10.5k Likes
-                  </button>
-                  <button type="button">
-                    <i className="bi bi-chat-dots"></i> 10.5k Comments
-                  </button>
-                  <button type="button">
-                    <i className="bi bi-share"></i> 10.5k Shares
-                  </button>
-                  <button type="button">
-                    <i className="bi bi-bookmark"></i> 10 Saved
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+              );
+            }
+          )}
       </div>
       <div className="w-[20%] bg-white"></div>
     </div>
