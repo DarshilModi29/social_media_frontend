@@ -7,11 +7,13 @@ import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
+import GridLoader from "react-spinners/GridLoader";
 
 const Home = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [currUser, setCurrUser] = useState({ _id: "", username: "", name: "" });
+  const [loading, setLoading] = useState(true);
   const token = Cookies.get("user:token") || "";
 
   const notifier = useMemo(
@@ -30,9 +32,9 @@ const Home = () => {
     []
   );
 
-  const handleLikes = async (post_id, index) => {
+  const handleReaction = async (post_id, index, reaction = "like") => {
     try {
-      const res = await fetch(`http://localhost:8000/api/like`, {
+      const res = await fetch(`http://localhost:8000/api/${reaction}`, {
         method: "PUT",
         headers: {
           "Content-type": "application/json",
@@ -43,29 +45,11 @@ const Home = () => {
       const resData = await res.json();
       if (res.status === 200) {
         const { updatedPost } = resData;
-        data[index] = updatedPost;
-      } else {
-        notifier.alert(resData.message);
-      }
-    } catch (error) {
-      notifier.alert(error.toString());
-    }
-  };
-
-  const handleUnlikes = async (post_id, index) => {
-    try {
-      const res = await fetch(`http://localhost:8000/api/unlike`, {
-        method: "PUT",
-        headers: {
-          "Content-type": "application/json",
-          authorization: `bearer ${token}`,
-        },
-        body: JSON.stringify({ id: post_id }),
-      });
-      const resData = await res.json();
-      if (res.status === 200) {
-        const { updatedPost } = resData;
-        data[index] = updatedPost;
+        const updatePost = data?.map((post, i) => {
+          if (i === index) return updatedPost;
+          else return post;
+        });
+        setData(updatePost);
       } else {
         notifier.alert(resData.message);
       }
@@ -76,6 +60,7 @@ const Home = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
+      setLoading(true);
       const res = await fetch(`http://localhost:8000/api/all-posts`, {
         headers: { authorization: `bearer ${token}` },
       });
@@ -90,6 +75,7 @@ const Home = () => {
       } else {
         notifier.alert(resData.message);
       }
+      setLoading(false);
     };
     fetchPosts();
   }, [notifier, token]);
@@ -97,29 +83,35 @@ const Home = () => {
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
       <div className="w-[20%] bg-white flex flex-col">
-        <div className="h-[30%] flex justify-center items-center border-b">
-          <div className="flex flex-col justify-center items-center">
-            <Avatar
-              height={"50px"}
-              width={"50px"}
-              style={{ borderRadius: "50%" }}
-            />
-            <div className="my-2">
-              <h3 className="font-bold text-base">{currUser.name}</h3>
-              <p>@{currUser.username.split("@")[0]}</p>
-            </div>
-            <div className="h-[30px] flex justify-around w-[250px] text-center">
-              {stats.map((stat) => {
-                return (
-                  <div key={stat.id}>
-                    <h4 className="font-bold">{stat.stats}</h4>
-                    <p className="font-light">{stat.name}</p>
-                  </div>
-                );
-              })}
+        {loading ? (
+          <div className="h-[30%] flex justify-center items-center border-b">
+            <GridLoader />
+          </div>
+        ) : (
+          <div className="h-[30%] flex justify-center items-center border-b">
+            <div className="flex flex-col justify-center items-center">
+              <Avatar
+                height={"50px"}
+                width={"50px"}
+                style={{ borderRadius: "50%" }}
+              />
+              <div className="my-2">
+                <h3 className="font-bold text-base">{currUser.name}</h3>
+                <p>@{currUser.username.split("@")[0]}</p>
+              </div>
+              <div className="h-[30px] flex justify-around w-[250px] text-center">
+                {stats.map((stat) => {
+                  return (
+                    <div key={stat.id}>
+                      <h4 className="font-bold">{stat.stats}</h4>
+                      <p className="font-light">{stat.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className="h-[55%] flex flex-col justify-evenly pl-10 border-b">
           {navigation.map((nav) => {
             return (
@@ -137,6 +129,10 @@ const Home = () => {
           <button
             type="button"
             className="ml-10 mt-2 outline-none text-gray-500 hover:text-red-600"
+            onClick={() => {
+              Cookies.remove("user:token");
+              navigate("/auth/signin");
+            }}
           >
             <i className="bi bi-box-arrow-right mr-1"></i> Log Out
           </button>
@@ -158,7 +154,12 @@ const Home = () => {
             <i className="bi bi-plus-lg mr-1"></i> Create New Post
           </Button>
         </div>
-        {data?.length > 0 &&
+        {loading ? (
+          <div className="h-[90%] flex justify-center items-center">
+            <GridLoader />
+          </div>
+        ) : (
+          data?.length > 0 &&
           data?.map(
             (
               {
@@ -203,8 +204,8 @@ const Home = () => {
                       type="button"
                       onClick={() =>
                         isAlreadyLiked
-                          ? handleUnlikes(_id, index)
-                          : handleLikes(_id, index)
+                          ? handleReaction(_id, index, "unlike")
+                          : handleReaction(_id, index, "like")
                       }
                     >
                       <i
@@ -229,7 +230,8 @@ const Home = () => {
                 </div>
               );
             }
-          )}
+          )
+        )}
       </div>
       <div className="w-[20%] bg-white"></div>
     </div>
