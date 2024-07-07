@@ -31,9 +31,9 @@ export const navigation = [
   },
   {
     id: 3,
-    name: "Direct",
-    icon: "bi bi-send mr-1",
-    url: "/",
+    name: "Favourites",
+    icon: "bi bi-bookmark-star",
+    url: "/saved-posts",
   },
   {
     id: 4,

@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import CreatePost from "../modules/CreatePost";
 import Profile from "../modules/Profile";
 import User from "../modules/User";
+import Favourites from "../modules/Favourites";
 
 const PrivateRoute = ({ children }) => {
   const isUserLoggedIn = Cookies.get("user:token") || false;
@@ -57,6 +58,12 @@ const Routers = () => {
       name: "user profile",
       path: "/user/:username",
       component: <User />,
+    },
+    {
+      id: 7,
+      name: "saved posts",
+      path: "/saved-posts",
+      component: <Favourites />,
     },
   ];
   return (

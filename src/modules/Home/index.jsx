@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import GridLoader from "react-spinners/GridLoader";
+import { handleReaction } from "../../components/functions";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -31,32 +32,6 @@ const Home = () => {
       }),
     []
   );
-
-  const handleReaction = async (post_id, index, reaction = "like") => {
-    try {
-      const res = await fetch(`http://localhost:8000/api/${reaction}`, {
-        method: "PUT",
-        headers: {
-          "Content-type": "application/json",
-          authorization: `bearer ${token}`,
-        },
-        body: JSON.stringify({ id: post_id }),
-      });
-      const resData = await res.json();
-      if (res.status === 200) {
-        const { updatedPost } = resData;
-        const updatePost = data?.map((post, i) => {
-          if (i === index) return updatedPost;
-          else return post;
-        });
-        setData(updatePost);
-      } else {
-        notifier.alert(resData.message);
-      }
-    } catch (error) {
-      notifier.alert(error.toString());
-    }
-  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -169,11 +144,15 @@ const Home = () => {
                 image = "",
                 user = {},
                 likes = [],
+                favourites = [],
               },
               index
             ) => {
               const isAlreadyLiked =
                 likes.length > 0 && likes.includes(currUser._id);
+
+              const isFav =
+                favourites.length > 0 && favourites.includes(currUser._id);
               return (
                 <div key={_id} className="bg-white w-[70%] mx-auto mt-12 p-6">
                   <div
@@ -204,8 +183,24 @@ const Home = () => {
                       type="button"
                       onClick={() =>
                         isAlreadyLiked
-                          ? handleReaction(_id, index, "unlike")
-                          : handleReaction(_id, index, "like")
+                          ? handleReaction(
+                              token,
+                              notifier,
+                              data,
+                              setData,
+                              _id,
+                              index,
+                              "unlike"
+                            )
+                          : handleReaction(
+                              token,
+                              notifier,
+                              data,
+                              setData,
+                              _id,
+                              index,
+                              "like"
+                            )
                       }
                     >
                       <i
@@ -223,8 +218,36 @@ const Home = () => {
                     <button type="button">
                       <i className="bi bi-share"></i> 10.5k Shares
                     </button>
-                    <button type="button">
-                      <i className="bi bi-bookmark"></i> 10 Saved
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isFav
+                          ? handleReaction(
+                              token,
+                              notifier,
+                              data,
+                              setData,
+                              _id,
+                              index,
+                              "unfavourites"
+                            )
+                          : handleReaction(
+                              token,
+                              notifier,
+                              data,
+                              setData,
+                              _id,
+                              index,
+                              "favourites"
+                            )
+                      }
+                    >
+                      <i
+                        className={
+                          isFav ? "bi bi-bookmark-star-fill" : "bi bi-bookmark"
+                        }
+                      ></i>{" "}
+                      {favourites.length}
                     </button>
                   </div>
                 </div>
