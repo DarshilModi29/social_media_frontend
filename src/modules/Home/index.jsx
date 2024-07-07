@@ -9,12 +9,15 @@ import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import GridLoader from "react-spinners/GridLoader";
 import { handleReaction } from "../../components/functions";
+import Modal from "../../components/modal";
 
 const Home = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [currUser, setCurrUser] = useState({ _id: "", username: "", name: "" });
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [postId, setPostId] = useState("");
   const token = Cookies.get("user:token") || "";
 
   const notifier = useMemo(
@@ -52,8 +55,26 @@ const Home = () => {
       }
       setLoading(false);
     };
+
     fetchPosts();
   }, [notifier, token]);
+
+  const updateCommentsCount = (postId, increment = true) => {
+    setData((prevData) =>
+      prevData.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              comments: increment
+                ? (post.comments || 0) + 1
+                : post.comments > 0
+                ? post.comments - 1
+                : 0,
+            }
+          : post
+      )
+    );
+  };
 
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
@@ -145,6 +166,7 @@ const Home = () => {
                 user = {},
                 likes = [],
                 favourites = [],
+                comments = 0,
               },
               index
             ) => {
@@ -212,11 +234,14 @@ const Home = () => {
                       ></i>{" "}
                       {likes.length} Likes
                     </button>
-                    <button type="button">
-                      <i className="bi bi-chat-dots"></i> 10.5k Comments
-                    </button>
-                    <button type="button">
-                      <i className="bi bi-share"></i> 10.5k Shares
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowModal(true);
+                        setPostId(_id);
+                      }}
+                    >
+                      <i className="bi bi-chat-dots"></i> {comments} Comments
                     </button>
                     <button
                       type="button"
@@ -247,7 +272,7 @@ const Home = () => {
                           isFav ? "bi bi-bookmark-star-fill" : "bi bi-bookmark"
                         }
                       ></i>{" "}
-                      {favourites.length}
+                      {favourites.length} Saved
                     </button>
                   </div>
                 </div>
@@ -257,6 +282,13 @@ const Home = () => {
         )}
       </div>
       <div className="w-[20%] bg-white"></div>
+      {showModal && (
+        <Modal
+          postId={postId}
+          onClose={() => setShowModal(false)}
+          updateCommentsCount={updateCommentsCount}
+        />
+      )}
     </div>
   );
 };
