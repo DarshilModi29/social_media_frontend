@@ -4,6 +4,7 @@ import Button from "../../components/button";
 import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import { useNavigate } from "react-router-dom";
+import { uploadImage } from "../../components/functions";
 import Cookies from "js-cookie";
 
 const CreatePost = () => {
@@ -28,29 +29,9 @@ const CreatePost = () => {
     },
   });
 
-  const uploadImage = async () => {
-    const formData = new FormData();
-    formData.append("file", data.img);
-    formData.append("upload_preset", "social-media");
-    formData.append("cloud_name", process.env.REACT_APP_CLOUD_NAME);
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUD_NAME}/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-    if (res.status === 200) {
-      return await res.json();
-    } else {
-      return "Error";
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { secure_url } = await uploadImage();
+    const { secure_url } = await uploadImage(data);
 
     const response = await fetch(`http://localhost:8000/api/new-post`, {
       method: "POST",

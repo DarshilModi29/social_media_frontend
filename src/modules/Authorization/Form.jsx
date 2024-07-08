@@ -40,7 +40,6 @@ const Form = ({ isSignInPage = false }) => {
       }
     );
     const responseData = await response.json();
-    console.log(responseData);
     if (isSignInPage) {
       if (response.status === 200) {
         Cookies.set("user:token", responseData.token, { expires: 365 * 2 });
@@ -111,7 +110,6 @@ const Form = ({ isSignInPage = false }) => {
               className="cursor-pointer text-md hover:text-blue-700 underline"
               onClick={() => {
                 navigate(isSignInPage ? "/auth/signup" : "/auth/signin");
-                console.log(window.location.pathname.includes("signin"));
               }}
             >
               {isSignInPage ? "Create new account" : "Already have account"}

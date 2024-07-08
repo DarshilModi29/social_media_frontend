@@ -8,7 +8,10 @@ import Cookies from "js-cookie";
 import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import GridLoader from "react-spinners/GridLoader";
-import { handleReaction } from "../../components/functions";
+import {
+  handleReaction,
+  updateCommentsCount,
+} from "../../components/functions";
 import Modal from "../../components/modal";
 
 const Home = () => {
@@ -59,22 +62,7 @@ const Home = () => {
     fetchPosts();
   }, [notifier, token]);
 
-  const updateCommentsCount = (postId, increment = true) => {
-    setData((prevData) =>
-      prevData.map((post) =>
-        post._id === postId
-          ? {
-              ...post,
-              comments: increment
-                ? (post.comments || 0) + 1
-                : post.comments > 0
-                ? post.comments - 1
-                : 0,
-            }
-          : post
-      )
-    );
-  };
+  // updateCommentsCount(setData);
 
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
@@ -287,6 +275,7 @@ const Home = () => {
           postId={postId}
           onClose={() => setShowModal(false)}
           updateCommentsCount={updateCommentsCount}
+          setData={setData}
         />
       )}
     </div>

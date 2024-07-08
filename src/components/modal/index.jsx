@@ -6,7 +6,7 @@ import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import GridLoader from "react-spinners/GridLoader";
 
-const Modal = ({ onClose, postId, updateCommentsCount }) => {
+const Modal = ({ onClose, postId, updateCommentsCount, setData }) => {
   const notifier = useMemo(
     () =>
       new AWN({
@@ -118,7 +118,7 @@ const Modal = ({ onClose, postId, updateCommentsCount }) => {
           setComments((prevComments) => [...prevComments, data.newComment]);
           setMsg("");
           notifier.success(data.message);
-          updateCommentsCount(postId, true);
+          updateCommentsCount(setData, postId, true);
         } else {
           notifier.alert(data.message);
         }
@@ -154,7 +154,7 @@ const Modal = ({ onClose, postId, updateCommentsCount }) => {
             prevComments.filter((comment) => comment._id !== id)
           );
           notifier.success(data.message);
-          updateCommentsCount(postId, false);
+          updateCommentsCount(setData, postId, false);
         } else {
           notifier.alert(data.message);
         }

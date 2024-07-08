@@ -6,15 +6,23 @@ import AWN from "awesome-notifications";
 import "awesome-notifications/dist/style.css";
 import { useParams } from "react-router-dom";
 import Button from "../../components/button";
+import {
+  handleReaction,
+  updateCommentsCount,
+} from "../../components/functions";
+import Modal from "../../components/modal";
 import GridLoader from "react-spinners/GridLoader";
 
 const User = () => {
   const [post, setPost] = useState([]);
   const [userData, setUserData] = useState({ id: "", username: "", name: "" });
+  const [currUserId, setCurrUserId] = useState("");
   const [isFollowed, setIsFollowed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [disButton, setDisbutton] = useState(false);
-
+  const [showModal, setShowModal] = useState(false);
+  const [postId, setPostId] = useState("");
+  const token = Cookies.get("user:token") || "";
   const { username } = useParams();
 
   const notifier = useMemo(
@@ -39,7 +47,7 @@ const User = () => {
       method: purpose === "follow" ? "POST" : "DELETE",
       headers: {
         "Content-Type": "application/json",
-        authorization: `bearer ${Cookies.get("user:token") || ""}`,
+        authorization: `bearer ${token}`,
       },
       body: JSON.stringify({ id: userData.id }),
     });
@@ -73,6 +81,7 @@ const User = () => {
           name: resData.userDetails.username,
         });
         setIsFollowed(resData.isFollowed);
+        setCurrUserId(resData.currUserId);
       } else {
         notifier.alert(resData.message);
       }
@@ -126,7 +135,23 @@ const User = () => {
           <div className="flex justify-between flex-wrap">
             {post?.length > 0 &&
               post?.map(
-                ({ _id, caption = "", description = "", image = "" }) => {
+                (
+                  {
+                    _id,
+                    caption = "",
+                    description = "",
+                    image = "",
+                    likes = [],
+                    favourites = [],
+                    comments = 0,
+                  },
+                  index
+                ) => {
+                  const isAlreadyLiked =
+                    likes.length > 0 && likes.includes(currUserId);
+
+                  const isFav =
+                    favourites.length > 0 && favourites.includes(currUserId);
                   return (
                     <div
                       key={_id}
@@ -144,17 +169,83 @@ const User = () => {
                         <p className="mt-2 text-justify">{description}</p>
                       </div>
                       <div className="flex justify-evenly text-sm text-black font-medium">
-                        <button type="button" className="flex items-center">
-                          <i className="bi bi-heart mr-2"></i> 10.5k
+                        <button
+                          type="button"
+                          className="flex items-center"
+                          onClick={() =>
+                            isAlreadyLiked
+                              ? handleReaction(
+                                  token,
+                                  notifier,
+                                  post,
+                                  setPost,
+                                  _id,
+                                  index,
+                                  "unlike"
+                                )
+                              : handleReaction(
+                                  token,
+                                  notifier,
+                                  post,
+                                  setPost,
+                                  _id,
+                                  index,
+                                  "like"
+                                )
+                          }
+                        >
+                          <i
+                            className={`${
+                              isAlreadyLiked
+                                ? "bi bi-heart-fill text-red-600"
+                                : "bi bi-heart"
+                            } mr-2`}
+                          ></i>{" "}
+                          {likes.length}
                         </button>
-                        <button type="button" className="flex items-center">
-                          <i className="bi bi-chat-dots mr-2"></i> 10.5k
+                        <button
+                          type="button"
+                          className="flex items-center"
+                          onClick={() => {
+                            setShowModal(true);
+                            setPostId(_id);
+                          }}
+                        >
+                          <i className="bi bi-chat-dots mr-2"></i> {comments}
                         </button>
-                        <button type="button" className="flex items-center">
-                          <i className="bi bi-share mr-2"></i> 10.5k
-                        </button>
-                        <button type="button" className="flex items-center">
-                          <i className="bi bi-bookmark mr-2"></i> 10
+                        <button
+                          type="button"
+                          className="flex items-center"
+                          onClick={() =>
+                            isFav
+                              ? handleReaction(
+                                  token,
+                                  notifier,
+                                  post,
+                                  setPost,
+                                  _id,
+                                  index,
+                                  "unfavourites"
+                                )
+                              : handleReaction(
+                                  token,
+                                  notifier,
+                                  post,
+                                  setPost,
+                                  _id,
+                                  index,
+                                  "favourites"
+                                )
+                          }
+                        >
+                          <i
+                            className={`${
+                              isFav
+                                ? "bi bi-bookmark-star-fill"
+                                : "bi bi-bookmark"
+                            } mr-2`}
+                          ></i>{" "}
+                          {favourites.length}
                         </button>
                       </div>
                     </div>
@@ -163,6 +254,14 @@ const User = () => {
               )}
           </div>
         </div>
+      )}
+      {showModal && (
+        <Modal
+          postId={postId}
+          onClose={() => setShowModal(false)}
+          updateCommentsCount={updateCommentsCount}
+          setData={setPost}
+        />
       )}
     </div>
   );
