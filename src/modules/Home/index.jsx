@@ -62,8 +62,6 @@ const Home = () => {
     fetchPosts();
   }, [notifier, token]);
 
-  // updateCommentsCount(setData);
-
   return (
     <div className="h-screen bg-[#F2F2F2] flex overflow-hidden">
       <div className="w-[20%] bg-white flex flex-col">
